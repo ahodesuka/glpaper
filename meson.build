@@ -1,0 +1,126 @@
+project('glpaper', ['c', 'cpp'],
+    version : '0.1',
+    license : 'MIT',
+    default_options : ['warning_level=1', 'cpp_std=c++20']
+)
+
+embed = executable(
+  'embed',
+  sources : 'tools/embed.cc',
+  install : false,
+)
+
+transitions = [
+  'transitions/angular.glsl',
+  'transitions/bounce.glsl',
+  'transitions/bowtiehorizontal.glsl',
+  'transitions/bowtievertical.glsl',
+  'transitions/cannabisleaf.glsl',
+  'transitions/circlecrop.glsl',
+  'transitions/circle.glsl',
+  'transitions/circleopen.glsl',
+  'transitions/colorphase.glsl',
+  'transitions/colordistance.glsl',
+  'transitions/crazyparametricfun.glsl',
+  'transitions/crosshatch.glsl',
+  'transitions/crosswarp.glsl',
+  'transitions/crosszoom.glsl',
+  'transitions/cube.glsl',
+  'transitions/directional_easing.glsl',
+  'transitions/directional.glsl',
+  'transitions/directionalwarp.glsl',
+  'transitions/directionalwipe.glsl',
+  'transitions/doomscreentransition.glsl',
+  'transitions/doorway.glsl',
+  'transitions/dreamy.glsl',
+  'transitions/dreamyzoom.glsl',
+  'transitions/fadecolor.glsl',
+  'transitions/fade.glsl',
+  'transitions/fadegrayscale.glsl',
+  'transitions/filmburn.glsl',
+  'transitions/flyeye.glsl',
+  'transitions/glitchdisplace.glsl',
+  'transitions/gridflip.glsl',
+  'transitions/heart.glsl',
+  'transitions/hexagonalize.glsl',
+  'transitions/invertedpagecurl.glsl',
+  'transitions/kaleidoscope.glsl',
+  'transitions/leftright.glsl',
+  'transitions/linearblur.glsl',
+  'transitions/luma.glsl',
+  'transitions/luminance_melt.glsl',
+  'transitions/morph.glsl',
+  'transitions/mosaic.glsl',
+  'transitions/multiply_blend.glsl',
+  'transitions/perlin.glsl',
+  'transitions/pinwheel.glsl',
+  'transitions/pixelize.glsl',
+  'transitions/polar_function.glsl',
+  'transitions/polkadotscurtain.glsl',
+  'transitions/radial.glsl',
+  'transitions/randomnoisex.glsl',
+  'transitions/randomsquares.glsl',
+  'transitions/ripple.glsl',
+  'transitions/rotate_scale_fade.glsl',
+  'transitions/rotatetransition.glsl',
+  'transitions/simplezoom.glsl',
+  'transitions/squareswire.glsl',
+  'transitions/squeeze.glsl',
+  'transitions/stereoviewer.glsl',
+  'transitions/swap.glsl',
+  'transitions/swirl.glsl',
+  'transitions/tangentmotionblur.glsl',
+  'transitions/topbottom.glsl',
+  'transitions/undulatingburnout.glsl',
+  'transitions/waterdrop.glsl',
+  'transitions/wind.glsl',
+  'transitions/windowblinds.glsl',
+  'transitions/windowslice.glsl',
+  'transitions/wipedown.glsl',
+  'transitions/wipeleft.glsl',
+  'transitions/wiperight.glsl',
+  'transitions/wipeup.glsl',
+  'transitions/zoomincircles.glsl',
+]
+
+transitions_src = custom_target('embed-transitions',
+  input : transitions,
+  output : [ 'transitions.cc' ],
+  command : [embed, '@INPUT@', '@OUTPUT@'],
+)
+
+glpaper_cpp_args = [ '-DGL_GLEXT_PROTOTYPES', '-DGLX_GLXEXT_PROTOTYPES' ]
+
+glpaper_incs = include_directories('ext')
+
+glpaper_deps = [
+  dependency('dbus-1'),
+  dependency('fmt'),
+  dependency('gl'),
+  dependency('glx'),
+  dependency('libconfig++'),
+  dependency('spdlog'),
+  dependency('x11'),
+  dependency('xfixes'),
+  dependency('xrender'),
+]
+
+glpaper_srcs = [
+  transitions_src,
+  'src/config.cc',
+  'src/main.cc',
+  'src/shader.cc',
+  'src/texture.cc',
+  'src/window.cc',
+]
+
+executable(
+  meson.project_name(),
+  cpp_args : glpaper_cpp_args,
+  sources : glpaper_srcs,
+  include_directories : glpaper_incs,
+  dependencies : glpaper_deps,
+  gui_app : true,
+  install : true,
+)
+
