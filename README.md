@@ -1,6 +1,6 @@
 # glpaper
 
-A X11 wallpaper slideshow-type setter using OpenGL
+An X11 wallpaper slideshow-type setter using OpenGL
 
 ## Building
 ```
