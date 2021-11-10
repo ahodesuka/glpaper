@@ -188,8 +188,6 @@ int PaperWindow::run()
     setup_transition();
     setup_vbo();
 
-    bool first_draw{ true };
-
     while (true)
     {
         auto now{ steady_clock::now() };
@@ -212,53 +210,39 @@ int PaperWindow::run()
                 setup_transition();
             }
         }
-        else if (!first_draw)
-        {
-            while (true)
-            {
-                using namespace std::chrono;
-                dbus_connection_read_write(m_Bus, 0);
-                DBusMessage* msg{ dbus_connection_pop_message(m_Bus) };
-
-                if (msg)
-                {
-                    spdlog::info("msg");
-                    if (dbus_message_is_method_call(
-                            msg, "com.github.ahodesuka.glpaper.new", "new_wallpaper"))
-                    {
-                        break;
-                    }
-                    else if (dbus_message_is_method_call(
-                                 msg, "com.github.ahodesuka.glpaper.reload", "reload_config"))
-                    {
-                        // FIXME: This should do things when things change
-                        m_Config->load_config(true);
-                        load_paths();
-                        setup_transition();
-                        break;
-                    }
-
-                    dbus_message_unref(msg);
-                }
-                else
-                {
-                    // 100ms
-                    usleep(100000);
-                }
-
-                if (duration_cast<milliseconds>(steady_clock::now() - m_TransitionStart) >=
-                    m_Config->get_display_duration())
-                    break;
-            }
-
-            // continue here because we need to set the updated time delta in the shader before
-            // rendering
-            start_transition();
-            continue;
-        }
         else
         {
-            first_draw = false;
+            using namespace std::chrono;
+            dbus_connection_read_write(m_Bus, 1000);
+            DBusMessage* msg{ dbus_connection_pop_message(m_Bus) };
+
+            if (msg)
+            {
+                if (dbus_message_is_method_call(
+                        msg, "com.github.ahodesuka.glpaper.new", "new_wallpaper"))
+                {
+                    start_transition();
+                    continue;
+                }
+                else if (dbus_message_is_method_call(
+                             msg, "com.github.ahodesuka.glpaper.reload", "reload_config"))
+                {
+                    // FIXME: This should do things when things change
+                    m_Config->load_config(true);
+                    load_paths();
+                    setup_transition();
+                    continue;
+                }
+
+                dbus_message_unref(msg);
+            }
+
+            if (duration_cast<milliseconds>(steady_clock::now() - m_TransitionStart) >=
+                m_Config->get_display_duration())
+            {
+                start_transition();
+                continue;
+            }
         }
 
         glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
