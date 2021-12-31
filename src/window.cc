@@ -187,6 +187,7 @@ int PaperWindow::run()
     load_paths();
     setup_transition();
     setup_vbo();
+    start_transition();
 
     while (true)
     {
@@ -208,6 +209,9 @@ int PaperWindow::run()
                 m_TransitionStart = steady_clock::now();
                 // setup for the next transition
                 setup_transition();
+
+                std::string path{ m_CurrentTexture->get_path() };
+                m_Config->set_current_texture_path(path);
             }
         }
         else
@@ -324,8 +328,17 @@ void PaperWindow::load_textures()
     }
     else
     {
-        m_CurrentTexture = std::make_unique<Texture>(get_random_texture_path());
-        m_NextTexture    = std::make_unique<Texture>(get_random_texture_path());
+        auto cur{ m_Config->get_current_texture_path() };
+        m_CurrentTexture = std::make_unique<Texture>(m_Config->get_bg_color());
+
+        if (cur.empty())
+        {
+            m_NextTexture = std::make_unique<Texture>(get_random_texture_path());
+        }
+        else
+        {
+            m_NextTexture = std::make_unique<Texture>(cur);
+        }
     }
 
     m_CurrentTexture->bind(0);

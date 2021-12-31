@@ -69,7 +69,6 @@ transitions = [
   'transitions/stereoviewer.glsl',
   'transitions/swap.glsl',
   'transitions/swirl.glsl',
-  'transitions/tangentmotionblur.glsl',
   'transitions/topbottom.glsl',
   'transitions/undulatingburnout.glsl',
   'transitions/waterdrop.glsl',

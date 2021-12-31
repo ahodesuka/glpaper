@@ -1,11 +1,13 @@
 #pragma once
 
+#include <array>
 #include <string>
 
 class Texture
 {
 public:
     Texture(std::string path);
+    Texture(const std::array<float, 4>& color);
     ~Texture();
 
     void bind(unsigned int slot) const;
@@ -16,6 +18,8 @@ public:
     inline int get_height() const { return m_Height; }
 
 private:
+    Texture() = delete;
+
     std::string m_Path;
     unsigned int m_TexID;
 

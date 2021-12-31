@@ -4,12 +4,12 @@
 #include <filesystem>
 namespace fs = std::filesystem;
 
-#include <libconfig.h++>
 #include <spdlog/spdlog.h>
 #include <stdlib.h>
 
 Config::Config(cxxopts::ParseResult& res)
-    : m_BGColor{ 0.08f, 0.08f, 0.08f, 1.0f },
+    : m_Config{ std::make_unique<libconfig::Config>() },
+      m_BGColor{ 0.08f, 0.08f, 0.08f, 1.0f },
       m_TransitionDuration{ 3000 },
       m_DisplayDuration{ std::chrono::duration_cast<std::chrono::milliseconds>(
           std::chrono::minutes(120)) }
@@ -82,21 +82,20 @@ Config::Config(cxxopts::ParseResult& res)
 
 void Config::load_config(bool reload)
 {
-    libconfig::Config config;
-    config.readFile(m_ConfigPath.c_str());
+    m_Config->readFile(m_ConfigPath.c_str());
 
-    if ((reload || m_DirectoryPath.empty()) && config.exists("directory"))
+    if ((reload || m_DirectoryPath.empty()) && m_Config->exists("directory"))
     {
         std::string tmp;
-        config.lookupValue("directory", tmp);
+        m_Config->lookupValue("directory", tmp);
 
         if (fs::exists(tmp))
             m_DirectoryPath = std::move(tmp);
     }
 
-    if ((reload || !m_BGColorSet) && config.exists("bg-color"))
+    if ((reload || !m_BGColorSet) && m_Config->exists("bg-color"))
     {
-        auto& bg_color{ config.lookup("bg-color") };
+        auto& bg_color{ m_Config->lookup("bg-color") };
         std::array<float, 4> tmp;
         int n{ -1 };
 
@@ -116,30 +115,48 @@ void Config::load_config(bool reload)
             m_BGColor = std::move(tmp);
     }
 
-    if ((reload || m_EnabledTransitions.empty()) && config.exists("transitions"))
+    if ((reload || m_EnabledTransitions.empty()) && m_Config->exists("transitions"))
     {
         m_EnabledTransitions.clear();
 
-        auto& transitions{ config.lookup("transitions") };
+        auto& transitions{ m_Config->lookup("transitions") };
         for (auto& v : transitions)
             m_EnabledTransitions.emplace_back(v);
     }
 
-    if ((reload || !m_TransitionDurationSet) && config.exists("duration"))
+    if ((reload || !m_TransitionDurationSet) && m_Config->exists("duration"))
     {
         int dur;
-        config.lookupValue("duration", dur);
+        m_Config->lookupValue("duration", dur);
         m_TransitionDuration = std::chrono::milliseconds(dur);
     }
 
-    if ((reload || !m_DisplayDurationSet) && config.exists("minutes"))
+    if ((reload || !m_DisplayDurationSet) && m_Config->exists("minutes"))
     {
         int dur;
-        config.lookupValue("minutes", dur);
+        m_Config->lookupValue("minutes", dur);
         m_DisplayDuration =
             std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::minutes(dur));
     }
 
     if (m_DirectoryPath.empty())
         throw std::runtime_error("Wallpaper directory was not provided");
+
+    if (m_Config->exists("current-path"))
+    {
+        std::string tmp;
+        m_Config->lookupValue("current-path", tmp);
+
+        if (fs::exists(tmp))
+            m_CurrentTexturePath = std::move(tmp);
+    }
+}
+
+void Config::set_current_texture_path(std::string path)
+{
+    if (!m_Config->exists("current-path"))
+        m_Config->getRoot().add("current-path", libconfig::Setting::TypeString);
+
+    m_Config->getRoot()["current-path"] = path;
+    m_Config->writeFile(m_ConfigPath);
 }

@@ -30,6 +30,22 @@ Texture::Texture(std::string path) : m_Path{ std::move(path) }
 
     stbi_image_free(pixel_data);
 }
+Texture::Texture(const std::array<float, 4>& color)
+{
+    glGenTextures(1, &m_TexID);
+    bind(0);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+
+    std::array<unsigned char, 3> pixel_data{ static_cast<unsigned char>(color[0] * 255),
+                                             static_cast<unsigned char>(color[1] * 255),
+                                             static_cast<unsigned char>(color[2] * 255) };
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, 1, 1, 0, GL_RGB, GL_UNSIGNED_BYTE, pixel_data.data());
+    unbind();
+}
 
 Texture::~Texture()
 {
